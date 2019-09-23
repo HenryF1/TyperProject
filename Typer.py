@@ -9,31 +9,45 @@ class Word(pygame.sprite.Sprite):
 
         self.word_counter = 0
         self.word_list = word_list
-        self.font = pygame.font.Font('freesansbold.ttf', 100)
+        self.font = pygame.font.Font('courier.ttf', 100)
         self.typed_letters = ''
-        self.font_color = (0, 0, 0)
+        self.base_font_color = (0, 0, 0)
+        self.correct_font_color = (0, 255, 0)
+        self.incorrect_font_color = (255, 0, 0)
         self.text = []
 
     def update(self, key_pressed, *args):
-        if len(self.typed_letters) != len(self.word_list[self.word_counter]):
-            if key_pressed == self.word_list[self.word_counter][len(self.typed_letters)]:
-                self.typed_letters += key_pressed
+        current_word = self.word_list[self.word_counter]
 
-            self.text = [self.font.render(self.word_list[self.word_counter], True, self.font_color),
-                         self.font.render(self.typed_letters, True, (255, 0, 0))]
+        if self.typed_letters != current_word:
+
+            for char in key_pressed:
+                if char != '0' and len(self.typed_letters) < len(current_word):
+                    self.typed_letters += char
+                elif char == '0':
+                    self.typed_letters = self.typed_letters[:-1]
+
+            self.text = [self.font.render(current_word, True, self.base_font_color)]
+
+            for count in range(len(self.typed_letters)):
+                if self.typed_letters[count] == current_word[count]:
+                    self.text.append(self.font.render(self.typed_letters[count], True, self.correct_font_color))
+                else:
+                    self.text.append(self.font.render(self.typed_letters[count], True, self.incorrect_font_color))
+
         else:
-            self.typed_letters = ""
+            self.typed_letters = ''
             if self.word_counter + 1 == len(self.word_list):
                 self.word_counter = 0
             else:
                 self.word_counter += 1
 
 
-
 class Game:
     def main(self, game_screen):
         clock = pygame.time.Clock()
         bg = pygame.transform.scale(pygame.image.load('cool_dog.jpg'), screen.get_size())
+
         word_group = pygame.sprite.Group()
         test = Word(test_list)
         word_group.add(test)
@@ -99,13 +113,20 @@ class Game:
                         press_key += 'n'
                     if event.key == pygame.K_m:
                         press_key += 'm'
+                    if event.key == pygame.K_BACKSPACE:
+                        press_key += '0'
 
             word_group.update(press_key)
 
-            game_screen.blit(bg, (0, 0))
+            # game_screen.blit(bg, (0, 0))
+            screen.fill((204, 255, 204))
+            game_screen.blit(test.text[0], test.text[0].get_rect(center=(512, 250)))
 
-            for lines in range(len(test.text)):
-                game_screen.blit(test.text[lines], test.text[lines].get_rect(center=(512, 250 + lines * 100)))
+            for letter in range(len(test.text) - 1):
+                game_screen.blit(test.text[letter + 1],
+                                 test.text[letter + 1].get_rect
+                                 (center=(512 - (len(test.word_list[test.word_counter]) - 1)
+                                          / 2 * 60 + letter * 60, 350)))
 
             pygame.display.update()
 
